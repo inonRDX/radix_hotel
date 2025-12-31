@@ -31,8 +31,21 @@ const App: React.FC = () => {
   const privacyButtonRef = useRef<HTMLButtonElement>(null);
   const { toasts, showToast, dismissToast } = useToasts();
 
+  // Unified focus handler to prevent "multiple selection" conflict
+  const handleElementFocus = (row: 'services' | 'apps', index: number) => {
+    setFocusedRow(row);
+    if (row === 'services') {
+      setFocusedIndex(index);
+    } else {
+      setAppFocusedIndex(index);
+    }
+  };
+
   // Helper to apply configuration from bridge
   const applyConfig = (config: any = {}) => {
+    console.log('[App] Applying config:', config);
+    if (!config) return;
+
     if (config.checkin) {
       setGuest(prev => ({
         ...prev,
@@ -49,6 +62,9 @@ const App: React.FC = () => {
 
   // Helper to apply state from bridge
   const applyState = (state: any = {}) => {
+    console.log('[App] Applying state:', state);
+    if (!state) return;
+
     if (state.guest) {
       setGuest(prev => ({
         ...prev,
@@ -117,7 +133,7 @@ const App: React.FC = () => {
 
   // Initialize bridge and listeners
   useEffect(() => {
-    Agent.onEvent((detail) => {
+    const unbind = Agent.onEvent((detail) => {
       console.log('[Agent Event]', detail);
       if (!detail || !detail.method) return;
 
@@ -148,7 +164,15 @@ const App: React.FC = () => {
       }
     });
 
-    bootstrapLauncher();
+    // Small delay to ensure native injection is complete
+    const timer = setTimeout(() => {
+      bootstrapLauncher();
+    }, 500);
+
+    return () => {
+      unbind();
+      clearTimeout(timer);
+    };
   }, []);
 
   // Detect if running in Radix environment and apply optimizations
@@ -229,23 +253,26 @@ const App: React.FC = () => {
         return;
       }
 
+      const servicesCount = SERVICES.length;
+      const appsCount = STREAMING_APPS.length;
+
       if (e.key === 'ArrowRight') {
         if (focusedRow === 'services') {
-          setFocusedIndex((prev) => Math.min(prev + 1, SERVICES.length - 1));
+          handleElementFocus('services', Math.min(focusedIndex + 1, servicesCount - 1));
         } else {
-          setAppFocusedIndex((prev) => Math.min(prev + 1, STREAMING_APPS.length - 1));
+          handleElementFocus('apps', Math.min(appFocusedIndex + 1, appsCount - 1));
         }
         setIsScrolled(true);
       } else if (e.key === 'ArrowLeft') {
         if (focusedRow === 'services') {
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          handleElementFocus('services', Math.max(focusedIndex - 1, 0));
         } else {
-          setAppFocusedIndex((prev) => Math.max(prev - 1, 0));
+          handleElementFocus('apps', Math.max(appFocusedIndex - 1, 0));
         }
       } else if (e.key === 'ArrowDown') {
-        if (focusedRow === 'services') setFocusedRow('apps');
+        if (focusedRow === 'services') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
       } else if (e.key === 'ArrowUp') {
-        if (focusedRow === 'apps') setFocusedRow('services');
+        if (focusedRow === 'apps') handleElementFocus('services', Math.min(focusedIndex, servicesCount - 1));
       } else if (e.key === 'Enter') {
         if (focusedRow === 'services') {
           setSelectedService(SERVICES[focusedIndex]);
@@ -417,7 +444,7 @@ const App: React.FC = () => {
 
       <Header weather={weather} guest={guest} />
 
-      <main className="relative z-20 h-full flex flex-col justify-end pb-28 pt-32">
+      <main className="relative z-20 h-full flex flex-col justify-end pb-4 pt-[var(--header-height)]">
         {welcomePhase !== 'hidden' && (
           <div className={`px-16 mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
             <div className="flex items-center space-x-2 text-amber-500 mb-2 drop-shadow-lg">
@@ -446,8 +473,7 @@ const App: React.FC = () => {
                 service={service}
                 isFocused={focusedRow === 'services' && focusedIndex === index}
                 onFocus={() => {
-                  setFocusedIndex(index);
-                  setFocusedRow('services');
+                  handleElementFocus('services', index);
                   setIsScrolled(true);
                 }}
                 onClick={() => {
@@ -471,12 +497,10 @@ const App: React.FC = () => {
             {STREAMING_APPS.map((app, index) => (
               <button
                 key={app.id}
-                onMouseEnter={() => {
-                  setAppFocusedIndex(index);
-                  setFocusedRow('apps');
-                }}
+                onMouseEnter={() => handleElementFocus('apps', index)}
+                onPointerEnter={() => handleElementFocus('apps', index)}
                 onClick={() => launchApp(app.package)}
-                className={`relative h-24 w-44 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
+                className={`relative h-[clamp(4rem,10vh,6rem)] w-[clamp(8rem,20vw,11rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
                   ${focusedRow === 'apps' && appFocusedIndex === index
                     ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
                     : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
@@ -503,7 +527,8 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 h-24 flex items-center justify-between px-16 z-50 bg-gradient-to-t from-slate-900/90 to-transparent">
+      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-16 z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
+        style={{ height: 'var(--footer-height)' }}>
         <div className="flex space-x-6">
           <button className={`flex items-center space-x-3 px-6 py-2 rounded-full border transition-all ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}`} onClick={toggleDND}>
             <Moon className={`w-4 h-4 ${isDND ? 'fill-current' : ''}`} />

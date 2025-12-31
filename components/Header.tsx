@@ -17,7 +17,8 @@ const Header: React.FC<HeaderProps> = ({ weather, guest }) => {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-24 flex items-center justify-between px-16 z-[100] bg-gradient-to-b from-black/80 to-transparent opacity-0 animate-[slideDown_3s_ease-out_1s_forwards]">
+    <header className="fixed top-0 left-0 right-0 flex items-center justify-between px-16 z-[100] bg-gradient-to-b from-black/80 to-transparent opacity-0 animate-[slideDown_3s_ease-out_1s_forwards]"
+      style={{ height: 'var(--header-height)' }}>
       <div className="flex items-center space-x-6">
         <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-900/40">
           <span className="serif text-2xl font-bold text-white leading-none">R</span>
@@ -33,10 +34,10 @@ const Header: React.FC<HeaderProps> = ({ weather, guest }) => {
 
       <div className="flex items-center space-x-12 text-slate-200">
         {weather && (
-          <div className="flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center space-x-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-sm">
             <Sun className="w-4 h-4 text-amber-500" />
             <span className="text-lg font-light">{weather.temp}°C</span>
-            <span className="text-xs text-slate-400 uppercase tracking-wider hidden md:inline">{weather.condition}</span>
+            <span className="text-xs text-slate-400 uppercase tracking-wider hidden lg:inline">{weather.condition}</span>
           </div>
         )}
 
