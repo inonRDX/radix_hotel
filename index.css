@@ -6,6 +6,22 @@
     --header-height: clamp(4rem, 10vh, 6rem);
     --footer-height: clamp(4rem, 10vh, 6rem);
     --internal-zoom: 1;
+    --ui-scale: 1;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+}
+
+.app-scale {
+    width: calc(100vw / var(--ui-scale));
+    height: calc(100vh / var(--ui-scale));
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+    overflow: hidden;
 }
 
 /* Base styles with zoom awareness */
@@ -48,6 +64,11 @@ body {
 
 /* Focus utility to prevent double selection */
 .is-focused {
+    outline: none;
+}
+
+button:focus,
+button:focus-visible {
     outline: none;
 }
 

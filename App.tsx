@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [welcomePhase, setWelcomePhase] = useState<'visible' | 'fading' | 'hidden'>('visible');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const privacyButtonRef = useRef<HTMLButtonElement>(null);
+  const serviceCardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const { toasts, showToast, dismissToast } = useToasts();
 
   // Unified focus handler to prevent "multiple selection" conflict
@@ -182,6 +183,20 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Scale UI to fit any resolution or high browser zoom.
+  useEffect(() => {
+    const updateScale = () => {
+      const baseWidth = 1920;
+      const baseHeight = 1080;
+      const scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
+      document.documentElement.style.setProperty('--ui-scale', scale.toFixed(3));
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   const launchApp = (packageName: string) => {
     safeRadixLaunch(packageName);
   };
@@ -239,6 +254,13 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [alarms]);
 
+  useEffect(() => {
+    if (focusedRow !== 'services') return;
+    const target = serviceCardRefs.current[focusedIndex];
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [focusedIndex, focusedRow]);
+
   const dismissSplash = () => {
     setShowSplash(false);
     sessionStorage.setItem('radixSplashShown', 'true');
@@ -247,6 +269,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       if (showSplash) { dismissSplash(); return; }
       if (selectedService) {
         if (e.key === 'Escape') setSelectedService(null);
@@ -430,7 +455,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-900 text-white font-sans">
+    <div className="app-scale">
+      <div className="relative w-full h-full overflow-hidden bg-slate-900 text-white font-sans">
       {showSplash && <SplashScreen guest={guest} onDismiss={dismissSplash} />}
 
       <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
@@ -444,9 +470,9 @@ const App: React.FC = () => {
 
       <Header weather={weather} guest={guest} />
 
-      <main className="relative z-20 h-full flex flex-col justify-end pb-4 pt-[var(--header-height)]">
+      <main className="relative z-20 h-full flex flex-col justify-end pb-[calc(var(--footer-height)+1rem)] pt-[var(--header-height)]">
         {welcomePhase !== 'hidden' && (
-          <div className={`px-16 mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
+          <div className={`px-[clamp(1rem,4vw,4rem)] mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
             <div className="flex items-center space-x-2 text-amber-500 mb-2 drop-shadow-lg">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
             </div>
@@ -461,15 +487,16 @@ const App: React.FC = () => {
 
         {/* Main Services Row */}
         <div className="mb-4 overflow-visible">
-          <h3 className="px-16 text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
+          <h3 className="px-[clamp(1rem,4vw,4rem)] text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
           <div
             ref={scrollContainerRef}
-            className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-16"
+            className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-[clamp(1rem,4vw,4rem)]"
             style={{ scrollSnapType: 'x proximity' }}
           >
             {SERVICES.map((service, index) => (
               <ServiceCard
                 key={service.id}
+                ref={el => { serviceCardRefs.current[index] = el; }}
                 service={service}
                 isFocused={focusedRow === 'services' && focusedIndex === index}
                 onFocus={() => {
@@ -491,7 +518,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Streaming Apps Row */}
-        <div className="px-16 mb-4">
+        <div className="px-[clamp(1rem,4vw,4rem)] mb-4">
           <h3 className="text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
           <div className="flex space-x-6">
             {STREAMING_APPS.map((app, index) => (
@@ -499,6 +526,7 @@ const App: React.FC = () => {
                 key={app.id}
                 onMouseEnter={() => handleElementFocus('apps', index)}
                 onPointerEnter={() => handleElementFocus('apps', index)}
+                onFocus={() => handleElementFocus('apps', index)}
                 onClick={() => launchApp(app.package)}
                 className={`relative h-[clamp(4rem,10vh,6rem)] w-[clamp(8rem,20vw,11rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
                   ${focusedRow === 'apps' && appFocusedIndex === index
@@ -527,7 +555,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-16 z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
+      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
         style={{ height: 'var(--footer-height)' }}>
         <div className="flex space-x-6">
           <button className={`flex items-center space-x-3 px-6 py-2 rounded-full border transition-all ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}`} onClick={toggleDND}>
@@ -566,7 +594,7 @@ const App: React.FC = () => {
           <h3 className="serif text-6xl font-bold">Wake Up Service</h3>
           <p className="text-2xl opacity-80">Good Morning, Suite {guest.room}</p>
           <button
-            className="px-16 py-6 bg-white text-red-950 rounded-full font-bold text-2xl hover:scale-110 transition-transform"
+            className="px-[clamp(2.5rem,6vw,4rem)] py-[clamp(1rem,2.5vw,1.5rem)] bg-white text-red-950 rounded-full font-bold text-2xl hover:scale-110 transition-transform"
             onClick={() => alarmAudio.stop()}
           >
             Dismiss Alarm
@@ -580,6 +608,7 @@ const App: React.FC = () => {
         onClose={() => setShowPrivacyMenu(false)}
         triggerRef={privacyButtonRef}
       />
+      </div>
     </div>
   );
 };

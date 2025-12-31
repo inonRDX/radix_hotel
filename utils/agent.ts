@@ -134,16 +134,12 @@ export const Agent = (() => {
                 break;
             case 'config.get':
                 emitResponse({
-                    id, result: Object.keys(mockConfig).length ? mockConfig : {
-                        checkin: { guestName: 'John Smith', roomNumber: '412' }
-                    }
+                    id, result: Object.keys(mockConfig).length ? mockConfig : {}
                 });
                 break;
             case 'state.get':
                 emitResponse({
-                    id, result: Object.keys(mockState).length ? mockState : {
-                        guest: { name: 'John Smith', roomNumber: '412' }
-                    }
+                    id, result: Object.keys(mockState).length ? mockState : {}
                 });
                 break;
             case 'pref.get': {
