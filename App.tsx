@@ -339,7 +339,7 @@ const App: React.FC = () => {
           body: (
             <div className="grid grid-cols-2 gap-4">
               {['Bloomberg TV', 'CNN International', 'ESPN HD', 'Discovery Plus', 'Sky News'].map(ch => (
-                <button key={ch} className="focus-ring p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left group">
+                <button key={ch} className="modal-focus-ring p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left group">
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-medium">{ch}</span>
                     <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -489,7 +489,7 @@ const App: React.FC = () => {
 
       <Header weather={weather} guest={guest} />
 
-      <main className="relative z-20 h-full flex flex-col justify-end pb-[calc(var(--footer-height)+1rem)] pt-[var(--header-height)]">
+      <main className="relative z-20 h-full flex flex-col justify-end pb-[calc(var(--footer-height)+3rem)] pt-[var(--header-height)]">
         {welcomePhase !== 'hidden' && (
           <div className={`px-[clamp(1rem,4vw,4rem)] mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
             <div className="flex items-center space-x-2 text-amber-500 mb-2 drop-shadow-lg">
@@ -506,7 +506,7 @@ const App: React.FC = () => {
 
         {/* Main Services Row */}
         <div className="mb-4 overflow-visible">
-          <h3 className="px-[clamp(1rem,4vw,4rem)] text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
+          <h3 className="px-[clamp(1rem,4vw,4rem)] text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
           <div
             ref={scrollContainerRef}
             className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-[clamp(1rem,4vw,4rem)]"
@@ -538,7 +538,7 @@ const App: React.FC = () => {
 
         {/* Streaming Apps Row */}
         <div className="px-[clamp(1rem,4vw,4rem)] mb-4">
-          <h3 className="text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
+          <h3 className="text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
           <div className="flex space-x-6">
             {STREAMING_APPS.map((app, index) => (
                 <button
@@ -547,10 +547,10 @@ const App: React.FC = () => {
                   onPointerEnter={() => handleElementFocus('apps', index)}
                   onFocus={() => handleElementFocus('apps', index)}
                   onClick={() => launchApp(app.package)}
-                  className={`relative h-[clamp(4rem,10vh,6rem)] w-[clamp(8rem,20vw,11rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
-                    ${focusedRow === 'apps' && appFocusedIndex === index
-                      ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
-                      : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
+                className={`relative h-[clamp(5rem,12vh,7rem)] w-[clamp(9.5rem,24vw,13rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
+                  ${focusedRow === 'apps' && appFocusedIndex === index
+                    ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
+                    : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
                 `}
                 >
                 {/* Logo with subtle highlight */}
@@ -559,7 +559,7 @@ const App: React.FC = () => {
                   <img
                     src={app.logo}
                     alt={app.name}
-                    className={`h-10 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]
+                    className={`h-12 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]
                       ${app.id === 'disney' ? 'brightness-0 invert' : ''}
                     `}
                   />
@@ -574,11 +574,11 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
+      <footer className="fixed bottom-4 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
         style={{ height: 'var(--footer-height)' }}>
         <div className="flex space-x-6">
           <button
-            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full border transition-all
+            className={`flex items-center space-x-4 px-8 py-4 rounded-full border transition-all
               ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}
               ${focusedRow === 'footer' && footerFocusedIndex === 0 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
@@ -587,11 +587,11 @@ const App: React.FC = () => {
             onFocus={() => handleElementFocus('footer', 0)}
             onClick={toggleDND}
           >
-            <Moon className={`w-4 h-4 ${isDND ? 'fill-current' : ''}`} />
-            <span className="text-[10px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
+            <Moon className={`w-5 h-5 ${isDND ? 'fill-current' : ''}`} />
+            <span className="text-[12px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
           </button>
           <button
-            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+            className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 1 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
             onMouseEnter={() => handleElementFocus('footer', 1)}
@@ -599,12 +599,12 @@ const App: React.FC = () => {
             onFocus={() => handleElementFocus('footer', 1)}
             onClick={handleSetAlarm}
           >
-            <Clock className="w-4 h-4" />
-            <span className="text-[10px] uppercase tracking-widest font-bold">Set Alarm</span>
+            <Clock className="w-5 h-5" />
+            <span className="text-[12px] uppercase tracking-widest font-bold">Set Alarm</span>
           </button>
           <button
             ref={privacyButtonRef}
-            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+            className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 2 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
             onMouseEnter={() => handleElementFocus('footer', 2)}
@@ -612,13 +612,13 @@ const App: React.FC = () => {
             onFocus={() => handleElementFocus('footer', 2)}
             onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
           >
-            <Shield className="w-4 h-4" />
-            <span className="text-[10px] uppercase tracking-widest font-bold">Privacy</span>
+            <Shield className="w-5 h-5" />
+            <span className="text-[12px] uppercase tracking-widest font-bold">Privacy</span>
           </button>
         </div>
 
         <button
-          className={`focus-ring flex items-center space-x-3 px-8 py-3 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-xs
+          className={`flex items-center space-x-4 px-11 py-4 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-[12px]
             ${focusedRow === 'footer' && footerFocusedIndex === 3 ? 'ring-4 ring-amber-500/40 text-white' : ''}
           `}
           onMouseEnter={() => handleElementFocus('footer', 3)}

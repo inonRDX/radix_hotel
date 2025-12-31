@@ -62,7 +62,7 @@ const OverlayModal: React.FC<OverlayModalProps> = ({ content, onClose }) => {
       <div className="relative w-full max-w-6xl h-full flex flex-col md:flex-row bg-slate-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/5">
         <button
           onClick={onClose}
-          className="focus-ring absolute top-6 right-6 p-3 text-slate-400 hover:text-white transition-colors z-10"
+          className="modal-focus-ring absolute top-6 right-6 p-3 text-slate-400 hover:text-white transition-colors z-10"
         >
           <X className="w-8 h-8" />
         </button>
@@ -92,12 +92,12 @@ const OverlayModal: React.FC<OverlayModalProps> = ({ content, onClose }) => {
           </div>
 
           <div className="mt-16 flex space-x-4">
-            <button className="focus-ring px-8 py-4 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-all transform hover:scale-105">
+            <button className="modal-focus-ring px-8 py-4 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-all transform hover:scale-105">
               Confirm Selection
             </button>
             <button
               onClick={onClose}
-              className="focus-ring px-8 py-4 border border-white/10 hover:bg-white/5 text-slate-300 rounded-lg transition-all"
+              className="modal-focus-ring px-8 py-4 border border-white/10 hover:bg-white/5 text-slate-300 rounded-lg transition-all"
             >
               Back
             </button>

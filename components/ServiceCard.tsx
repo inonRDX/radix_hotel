@@ -15,13 +15,13 @@ const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(
       <div
         ref={ref}
         className={`relative group cursor-pointer flex-shrink-0 transition-all duration-500 ease-out snap-center
-          ${isFocused ? 'w-[300px] z-20' : 'w-[220px] z-10 opacity-60'}
+          ${isFocused ? 'w-[340px] z-20' : 'w-[250px] z-10 opacity-60'}
         `}
         onMouseEnter={onFocus}
         onPointerEnter={onFocus}
         onClick={onClick}
       >
-      <div className={`relative w-full h-[clamp(280px,50vh,400px)] rounded-2xl overflow-hidden transition-all duration-500 ease-out
+      <div className={`relative w-full h-[clamp(320px,54vh,460px)] rounded-2xl overflow-hidden transition-all duration-500 ease-out
         ${isFocused
           ? 'scale-110 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-4 ring-amber-500 ring-offset-[6px] ring-offset-slate-900'
           : 'scale-95 shadow-lg shadow-black/20'}
