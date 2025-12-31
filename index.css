@@ -72,6 +72,11 @@ button:focus-visible {
     outline: none;
 }
 
+.focus-ring:focus,
+.focus-ring:focus-visible {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.6);
+}
+
 /* Ensure images don't break at high zoom */
 img {
     max-width: 100%;

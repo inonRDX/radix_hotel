@@ -16,8 +16,9 @@ import { Agent } from './utils/agent';
 
 const App: React.FC = () => {
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [focusedRow, setFocusedRow] = useState<'services' | 'apps'>('services');
+  const [focusedRow, setFocusedRow] = useState<'services' | 'apps' | 'footer'>('services');
   const [appFocusedIndex, setAppFocusedIndex] = useState(0);
+  const [footerFocusedIndex, setFooterFocusedIndex] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showSplash, setShowSplash] = useState(false);
@@ -33,12 +34,14 @@ const App: React.FC = () => {
   const { toasts, showToast, dismissToast } = useToasts();
 
   // Unified focus handler to prevent "multiple selection" conflict
-  const handleElementFocus = (row: 'services' | 'apps', index: number) => {
+  const handleElementFocus = (row: 'services' | 'apps' | 'footer', index: number) => {
     setFocusedRow(row);
     if (row === 'services') {
       setFocusedIndex(index);
-    } else {
+    } else if (row === 'apps') {
       setAppFocusedIndex(index);
+    } else {
+      setFooterFocusedIndex(index);
     }
   };
 
@@ -218,6 +221,10 @@ const App: React.FC = () => {
     );
   };
 
+  const handleSetAlarm = () => {
+    showToast('Set Alarm', 'Alarm setup is not configured yet.', 'fa-bell');
+  };
+
   // Handle welcome text phasing: visible -> fading -> hidden
   useEffect(() => {
     if (welcomePhase === 'visible') {
@@ -280,35 +287,47 @@ const App: React.FC = () => {
 
       const servicesCount = SERVICES.length;
       const appsCount = STREAMING_APPS.length;
+      const footerCount = 4;
 
       if (e.key === 'ArrowRight') {
         if (focusedRow === 'services') {
           handleElementFocus('services', Math.min(focusedIndex + 1, servicesCount - 1));
-        } else {
+        } else if (focusedRow === 'apps') {
           handleElementFocus('apps', Math.min(appFocusedIndex + 1, appsCount - 1));
+        } else {
+          handleElementFocus('footer', Math.min(footerFocusedIndex + 1, footerCount - 1));
         }
         setIsScrolled(true);
       } else if (e.key === 'ArrowLeft') {
         if (focusedRow === 'services') {
           handleElementFocus('services', Math.max(focusedIndex - 1, 0));
-        } else {
+        } else if (focusedRow === 'apps') {
           handleElementFocus('apps', Math.max(appFocusedIndex - 1, 0));
+        } else {
+          handleElementFocus('footer', Math.max(footerFocusedIndex - 1, 0));
         }
       } else if (e.key === 'ArrowDown') {
         if (focusedRow === 'services') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
+        if (focusedRow === 'apps') handleElementFocus('footer', Math.min(footerFocusedIndex, footerCount - 1));
       } else if (e.key === 'ArrowUp') {
         if (focusedRow === 'apps') handleElementFocus('services', Math.min(focusedIndex, servicesCount - 1));
+        if (focusedRow === 'footer') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
       } else if (e.key === 'Enter') {
         if (focusedRow === 'services') {
           setSelectedService(SERVICES[focusedIndex]);
-        } else {
+        } else if (focusedRow === 'apps') {
           launchApp(STREAMING_APPS[appFocusedIndex].package);
+        } else {
+          if (footerFocusedIndex === 0) toggleDND();
+          if (footerFocusedIndex === 1) handleSetAlarm();
+          if (footerFocusedIndex === 2) setShowPrivacyMenu(!showPrivacyMenu);
+          if (footerFocusedIndex === 3) handleCheckout();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, appFocusedIndex, focusedRow, selectedService, showSplash]);
+  }, [focusedIndex, appFocusedIndex, footerFocusedIndex, focusedRow, selectedService, showSplash]);
 
   const getModalContent = (service: Service): ModalContent => {
     switch (service.id) {
@@ -320,7 +339,7 @@ const App: React.FC = () => {
           body: (
             <div className="grid grid-cols-2 gap-4">
               {['Bloomberg TV', 'CNN International', 'ESPN HD', 'Discovery Plus', 'Sky News'].map(ch => (
-                <button key={ch} className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left group">
+                <button key={ch} className="focus-ring p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left group">
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-medium">{ch}</span>
                     <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -522,18 +541,18 @@ const App: React.FC = () => {
           <h3 className="text-[10px] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
           <div className="flex space-x-6">
             {STREAMING_APPS.map((app, index) => (
-              <button
-                key={app.id}
-                onMouseEnter={() => handleElementFocus('apps', index)}
-                onPointerEnter={() => handleElementFocus('apps', index)}
-                onFocus={() => handleElementFocus('apps', index)}
-                onClick={() => launchApp(app.package)}
-                className={`relative h-[clamp(4rem,10vh,6rem)] w-[clamp(8rem,20vw,11rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
-                  ${focusedRow === 'apps' && appFocusedIndex === index
-                    ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
-                    : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
+                <button
+                  key={app.id}
+                  onMouseEnter={() => handleElementFocus('apps', index)}
+                  onPointerEnter={() => handleElementFocus('apps', index)}
+                  onFocus={() => handleElementFocus('apps', index)}
+                  onClick={() => launchApp(app.package)}
+                  className={`relative h-[clamp(4rem,10vh,6rem)] w-[clamp(8rem,20vw,11rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
+                    ${focusedRow === 'apps' && appFocusedIndex === index
+                      ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
+                      : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
                 `}
-              >
+                >
                 {/* Logo with subtle highlight */}
                 <div className="relative flex items-center justify-center w-full h-full p-6">
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl rounded-full" />
@@ -558,22 +577,53 @@ const App: React.FC = () => {
       <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
         style={{ height: 'var(--footer-height)' }}>
         <div className="flex space-x-6">
-          <button className={`flex items-center space-x-3 px-6 py-2 rounded-full border transition-all ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}`} onClick={toggleDND}>
+          <button
+            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full border transition-all
+              ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}
+              ${focusedRow === 'footer' && footerFocusedIndex === 0 ? 'ring-4 ring-amber-500/40 text-white' : ''}
+            `}
+            onMouseEnter={() => handleElementFocus('footer', 0)}
+            onPointerEnter={() => handleElementFocus('footer', 0)}
+            onFocus={() => handleElementFocus('footer', 0)}
+            onClick={toggleDND}
+          >
             <Moon className={`w-4 h-4 ${isDND ? 'fill-current' : ''}`} />
             <span className="text-[10px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
           </button>
-          <button className="flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all">
+          <button
+            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+              ${focusedRow === 'footer' && footerFocusedIndex === 1 ? 'ring-4 ring-amber-500/40 text-white' : ''}
+            `}
+            onMouseEnter={() => handleElementFocus('footer', 1)}
+            onPointerEnter={() => handleElementFocus('footer', 1)}
+            onFocus={() => handleElementFocus('footer', 1)}
+            onClick={handleSetAlarm}
+          >
             <Clock className="w-4 h-4" />
             <span className="text-[10px] uppercase tracking-widest font-bold">Set Alarm</span>
           </button>
-          <button ref={privacyButtonRef} className="flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all" onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}>
+          <button
+            ref={privacyButtonRef}
+            className={`focus-ring flex items-center space-x-3 px-6 py-2 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+              ${focusedRow === 'footer' && footerFocusedIndex === 2 ? 'ring-4 ring-amber-500/40 text-white' : ''}
+            `}
+            onMouseEnter={() => handleElementFocus('footer', 2)}
+            onPointerEnter={() => handleElementFocus('footer', 2)}
+            onFocus={() => handleElementFocus('footer', 2)}
+            onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
+          >
             <Shield className="w-4 h-4" />
             <span className="text-[10px] uppercase tracking-widest font-bold">Privacy</span>
           </button>
         </div>
 
         <button
-          className="flex items-center space-x-3 px-8 py-3 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
+          className={`focus-ring flex items-center space-x-3 px-8 py-3 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-xs
+            ${focusedRow === 'footer' && footerFocusedIndex === 3 ? 'ring-4 ring-amber-500/40 text-white' : ''}
+          `}
+          onMouseEnter={() => handleElementFocus('footer', 3)}
+          onPointerEnter={() => handleElementFocus('footer', 3)}
+          onFocus={() => handleElementFocus('footer', 3)}
           onClick={handleCheckout}
         >
           <LogOut className="w-4 h-4" />
