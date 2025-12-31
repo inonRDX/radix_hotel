@@ -6,9 +6,10 @@ import { ModalContent } from '../types';
 interface OverlayModalProps {
   content: ModalContent;
   onClose: () => void;
+  isLowMotion?: boolean;
 }
 
-const OverlayModal: React.FC<OverlayModalProps> = ({ content, onClose }) => {
+const OverlayModal: React.FC<OverlayModalProps> = ({ content, onClose, isLowMotion = false }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const focusablesRef = useRef<HTMLButtonElement[]>([]);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -57,7 +58,7 @@ const OverlayModal: React.FC<OverlayModalProps> = ({ content, onClose }) => {
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-16 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300"
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-16 bg-slate-950/80 ${isLowMotion ? '' : 'backdrop-blur-xl animate-in fade-in duration-300'}`}
     >
       <div className="relative w-full max-w-6xl h-full flex flex-col md:flex-row bg-slate-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/5">
         <button

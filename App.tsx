@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [showPrivacyMenu, setShowPrivacyMenu] = useState(false);
   const [welcomePhase, setWelcomePhase] = useState<'visible' | 'fading' | 'hidden'>('visible');
+  const [isLowMotion, setIsLowMotion] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const privacyButtonRef = useRef<HTMLButtonElement>(null);
   const serviceCardRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -183,6 +184,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isRadixEnvironment()) {
       document.documentElement.classList.add('webview-low-motion');
+      setIsLowMotion(true);
     }
   }, []);
 
@@ -205,10 +207,8 @@ const App: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    if (confirm('Are you sure you want to check out?')) {
-      safeRadixCommand(RadixCommands.CHECKOUT);
-      showToast('Check Out', 'Processing your checkout request...', 'fa-arrow-right-from-bracket');
-    }
+    safeRadixCommand(RadixCommands.CHECKOUT);
+    showToast('Check Out', 'Processing your checkout request...', 'fa-arrow-right-from-bracket');
   };
 
   const toggleDND = () => {
@@ -289,6 +289,10 @@ const App: React.FC = () => {
       const appsCount = STREAMING_APPS.length;
       const footerCount = 4;
 
+      if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter', 'OK', 'Select'].includes(e.key) || e.code === 'NumpadEnter') {
+        e.preventDefault();
+      }
+
       if (e.key === 'ArrowRight') {
         if (focusedRow === 'services') {
           handleElementFocus('services', Math.min(focusedIndex + 1, servicesCount - 1));
@@ -312,7 +316,12 @@ const App: React.FC = () => {
       } else if (e.key === 'ArrowUp') {
         if (focusedRow === 'apps') handleElementFocus('services', Math.min(focusedIndex, servicesCount - 1));
         if (focusedRow === 'footer') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
-      } else if (e.key === 'Enter') {
+      } else if (
+        e.key === 'Enter' ||
+        e.key === 'OK' ||
+        e.key === 'Select' ||
+        e.code === 'NumpadEnter'
+      ) {
         if (focusedRow === 'services') {
           setSelectedService(SERVICES[focusedIndex]);
         } else if (focusedRow === 'apps') {
@@ -476,107 +485,108 @@ const App: React.FC = () => {
   return (
     <div className="app-scale">
       <div className="relative w-full h-full overflow-hidden bg-slate-900 text-white font-sans">
-      {showSplash && <SplashScreen guest={guest} onDismiss={dismissSplash} />}
+        {showSplash && <SplashScreen guest={guest} onDismiss={dismissSplash} />}
 
-      <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
+        <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
         <div className="absolute inset-0 bg-slate-900/40 z-10" />
         <img
           src={focusedRow === 'services' ? SERVICES[focusedIndex].image : 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=2000'}
-          className="w-full h-full object-cover blur-sm opacity-60 scale-105 transition-all duration-1000"
+          className={`w-full h-full object-cover opacity-60 transition-all ${isLowMotion ? 'duration-300' : 'blur-sm scale-105 duration-1000'}`}
           alt=""
         />
       </div>
 
-      <Header weather={weather} guest={guest} />
+        <Header weather={weather} guest={guest} />
 
-      <main className="relative z-20 h-full flex flex-col justify-end pb-[calc(var(--footer-height)+3rem)] pt-[var(--header-height)]">
-        {welcomePhase !== 'hidden' && (
-          <div className={`px-[clamp(1rem,4vw,4rem)] mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
-            <div className="flex items-center space-x-2 text-amber-500 mb-2 drop-shadow-lg">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
+        <main className="relative z-20 h-full flex flex-col justify-end pb-[calc(var(--footer-height)+3rem)] pt-[var(--header-height)]">
+          {welcomePhase !== 'hidden' && (
+            <div className={`px-[clamp(1rem,4vw,4rem)] mb-8 transition-all duration-700 ${welcomePhase === 'fading' || isScrolled ? 'opacity-0 -translate-y-8' : 'opacity-100'}`}>
+              <div className="flex items-center space-x-2 text-amber-500 mb-2 drop-shadow-lg">
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
+              </div>
+              <h2 className="serif text-6xl font-bold mb-2 tracking-tighter">
+                Bonjour, <span className="text-amber-500">{guest.name.split(' ')[0]}</span>
+              </h2>
+              <p className="text-slate-200 text-lg font-light tracking-wide max-w-2xl leading-snug">
+                Your sanctuary in Suite {guest.room} is fully prepared. Explore our curated services for an unforgettable stay.
+              </p>
             </div>
-            <h2 className="serif text-6xl font-bold mb-2 tracking-tighter">
-              Bonjour, <span className="text-amber-500">{guest.name.split(' ')[0]}</span>
-            </h2>
-            <p className="text-slate-200 text-lg font-light tracking-wide max-w-2xl leading-snug">
-              Your sanctuary in Suite {guest.room} is fully prepared. Explore our curated services for an unforgettable stay.
-            </p>
-          </div>
-        )}
+          )}
 
-        {/* Main Services Row */}
-        <div className="mb-4 overflow-visible">
-          <h3 className="px-[clamp(1rem,4vw,4rem)] text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
-          <div
-            ref={scrollContainerRef}
-            className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-[clamp(1rem,4vw,4rem)]"
-            style={{ scrollSnapType: 'x proximity' }}
-          >
-            {SERVICES.map((service, index) => (
+          {/* Main Services Row */}
+          <div className="mb-4 overflow-visible">
+            <h3 className="px-[clamp(1rem,4vw,4rem)] text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
+            <div
+              ref={scrollContainerRef}
+              className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-[clamp(1rem,4vw,4rem)]"
+              style={{ scrollSnapType: 'x proximity' }}
+            >
+              {SERVICES.map((service, index) => (
               <ServiceCard
                 key={service.id}
                 ref={el => { serviceCardRefs.current[index] = el; }}
                 service={service}
                 isFocused={focusedRow === 'services' && focusedIndex === index}
+                isLowMotion={isLowMotion}
                 onFocus={() => {
                   handleElementFocus('services', index);
                   setIsScrolled(true);
                 }}
                 onClick={() => {
-                  if (service.id === 'cast') {
-                    safeRadixCommand(RadixCommands.CAST);
-                  } else if (service.id === 'tv') {
-                    safeRadixLaunch('com.tcl.tv');
-                  } else {
-                    setSelectedService(service);
-                  }
-                }}
-              />
-            ))}
+                    if (service.id === 'cast') {
+                      safeRadixCommand(RadixCommands.CAST);
+                    } else if (service.id === 'tv') {
+                      safeRadixLaunch('com.tcl.tv');
+                    } else {
+                      setSelectedService(service);
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Streaming Apps Row */}
-        <div className="px-[clamp(1rem,4vw,4rem)] mb-4">
-          <h3 className="text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
-          <div className="flex space-x-6">
-            {STREAMING_APPS.map((app, index) => (
-                <button
-                  key={app.id}
-                  onMouseEnter={() => handleElementFocus('apps', index)}
-                  onPointerEnter={() => handleElementFocus('apps', index)}
-                  onFocus={() => handleElementFocus('apps', index)}
-                  onClick={() => launchApp(app.package)}
+          {/* Streaming Apps Row */}
+          <div className="px-[clamp(1rem,4vw,4rem)] mb-4">
+            <h3 className="text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
+            <div className="flex space-x-6">
+              {STREAMING_APPS.map((app, index) => (
+              <button
+                key={app.id}
+                onMouseEnter={() => handleElementFocus('apps', index)}
+                onPointerEnter={() => handleElementFocus('apps', index)}
+                tabIndex={-1}
+                onClick={() => launchApp(app.package)}
                 className={`relative h-[clamp(5rem,12vh,7rem)] w-[clamp(9.5rem,24vw,13rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
                   ${focusedRow === 'apps' && appFocusedIndex === index
                     ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
                     : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
                 `}
                 >
-                {/* Logo with subtle highlight */}
-                <div className="relative flex items-center justify-center w-full h-full p-6">
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl rounded-full" />
-                  <img
-                    src={app.logo}
-                    alt={app.name}
-                    className={`h-12 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]
+                  {/* Logo with subtle highlight */}
+                  <div className="relative flex items-center justify-center w-full h-full p-6">
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl rounded-full" />
+                    <img
+                      src={app.logo}
+                      alt={app.name}
+                      className={`h-12 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]
                       ${app.id === 'disney' ? 'brightness-0 invert' : ''}
                     `}
-                  />
-                </div>
+                    />
+                  </div>
 
-                <div className={`absolute bottom-2 text-[8px] font-bold tracking-widest uppercase text-white/80 transition-opacity duration-500 ${focusedRow === 'apps' && appFocusedIndex === index ? 'opacity-100' : 'opacity-0'}`}>
-                  {app.name}
-                </div>
-              </button>
-            ))}
+                  <div className={`absolute bottom-2 text-[8px] font-bold tracking-widest uppercase text-white/80 transition-opacity duration-500 ${focusedRow === 'apps' && appFocusedIndex === index ? 'opacity-100' : 'opacity-0'}`}>
+                    {app.name}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      <footer className="fixed bottom-4 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
-        style={{ height: 'var(--footer-height)' }}>
-        <div className="flex space-x-6">
+        <footer className="fixed bottom-4 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
+          style={{ height: 'var(--footer-height)' }}>
+          <div className="flex space-x-6">
           <button
             className={`flex items-center space-x-4 px-8 py-4 rounded-full border transition-all
               ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}
@@ -584,24 +594,24 @@ const App: React.FC = () => {
             `}
             onMouseEnter={() => handleElementFocus('footer', 0)}
             onPointerEnter={() => handleElementFocus('footer', 0)}
-            onFocus={() => handleElementFocus('footer', 0)}
+            tabIndex={-1}
             onClick={toggleDND}
           >
-            <Moon className={`w-5 h-5 ${isDND ? 'fill-current' : ''}`} />
-            <span className="text-[12px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
-          </button>
+              <Moon className={`w-5 h-5 ${isDND ? 'fill-current' : ''}`} />
+              <span className="text-[12px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
+            </button>
           <button
             className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 1 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
             onMouseEnter={() => handleElementFocus('footer', 1)}
             onPointerEnter={() => handleElementFocus('footer', 1)}
-            onFocus={() => handleElementFocus('footer', 1)}
+            tabIndex={-1}
             onClick={handleSetAlarm}
           >
-            <Clock className="w-5 h-5" />
-            <span className="text-[12px] uppercase tracking-widest font-bold">Set Alarm</span>
-          </button>
+              <Clock className="w-5 h-5" />
+              <span className="text-[12px] uppercase tracking-widest font-bold">Set Alarm</span>
+            </button>
           <button
             ref={privacyButtonRef}
             className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
@@ -609,13 +619,13 @@ const App: React.FC = () => {
             `}
             onMouseEnter={() => handleElementFocus('footer', 2)}
             onPointerEnter={() => handleElementFocus('footer', 2)}
-            onFocus={() => handleElementFocus('footer', 2)}
+            tabIndex={-1}
             onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
           >
-            <Shield className="w-5 h-5" />
-            <span className="text-[12px] uppercase tracking-widest font-bold">Privacy</span>
-          </button>
-        </div>
+              <Shield className="w-5 h-5" />
+              <span className="text-[12px] uppercase tracking-widest font-bold">Privacy</span>
+            </button>
+          </div>
 
         <button
           className={`flex items-center space-x-4 px-11 py-4 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-[12px]
@@ -623,41 +633,42 @@ const App: React.FC = () => {
           `}
           onMouseEnter={() => handleElementFocus('footer', 3)}
           onPointerEnter={() => handleElementFocus('footer', 3)}
-          onFocus={() => handleElementFocus('footer', 3)}
+          tabIndex={-1}
           onClick={handleCheckout}
         >
-          <LogOut className="w-4 h-4" />
-          <span>Checkout</span>
-        </button>
-      </footer>
+            <LogOut className="w-4 h-4" />
+            <span>Checkout</span>
+          </button>
+        </footer>
 
       {selectedService && (
         <OverlayModal
           content={getModalContent(selectedService)}
           onClose={() => setSelectedService(null)}
+          isLowMotion={isLowMotion}
         />
       )}
 
-      {alarmAudio.isPlaying && (
-        <div className="fixed inset-0 z-[1000] bg-red-950/90 flex flex-col items-center justify-center space-y-8 animate-pulse">
-          <Bell className="w-32 h-32 text-white animate-bounce" />
-          <h3 className="serif text-6xl font-bold">Wake Up Service</h3>
-          <p className="text-2xl opacity-80">Good Morning, Suite {guest.room}</p>
-          <button
-            className="px-[clamp(2.5rem,6vw,4rem)] py-[clamp(1rem,2.5vw,1.5rem)] bg-white text-red-950 rounded-full font-bold text-2xl hover:scale-110 transition-transform"
-            onClick={() => alarmAudio.stop()}
-          >
-            Dismiss Alarm
-          </button>
-        </div>
-      )}
+        {alarmAudio.isPlaying && (
+          <div className="fixed inset-0 z-[1000] bg-red-950/90 flex flex-col items-center justify-center space-y-8 animate-pulse">
+            <Bell className="w-32 h-32 text-white animate-bounce" />
+            <h3 className="serif text-6xl font-bold">Wake Up Service</h3>
+            <p className="text-2xl opacity-80">Good Morning, Suite {guest.room}</p>
+            <button
+              className="px-[clamp(2.5rem,6vw,4rem)] py-[clamp(1rem,2.5vw,1.5rem)] bg-white text-red-950 rounded-full font-bold text-2xl hover:scale-110 transition-transform"
+              onClick={() => alarmAudio.stop()}
+            >
+              Dismiss Alarm
+            </button>
+          </div>
+        )}
 
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-      <PrivacyMenu
-        isOpen={showPrivacyMenu}
-        onClose={() => setShowPrivacyMenu(false)}
-        triggerRef={privacyButtonRef}
-      />
+        <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+        <PrivacyMenu
+          isOpen={showPrivacyMenu}
+          onClose={() => setShowPrivacyMenu(false)}
+          triggerRef={privacyButtonRef}
+        />
       </div>
     </div>
   );

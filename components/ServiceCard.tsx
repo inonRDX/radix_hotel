@@ -5,12 +5,18 @@ import { Service } from '../types';
 interface ServiceCardProps {
   service: Service;
   isFocused: boolean;
+  isLowMotion: boolean;
   onFocus: () => void;
   onClick: () => void;
 }
 
 const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(
-  ({ service, isFocused, onFocus, onClick }, ref) => {
+  ({ service, isFocused, isLowMotion, onFocus, onClick }, ref) => {
+    const focusEffects = isLowMotion
+      ? 'scale-100 ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900'
+      : 'scale-110 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-4 ring-amber-500 ring-offset-[6px] ring-offset-slate-900';
+    const idleEffects = isLowMotion ? 'scale-100' : 'scale-95 shadow-lg shadow-black/20';
+
     return (
       <div
         ref={ref}
@@ -21,17 +27,15 @@ const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(
         onPointerEnter={onFocus}
         onClick={onClick}
       >
-      <div className={`relative w-full h-[clamp(320px,54vh,460px)] rounded-2xl overflow-hidden transition-all duration-500 ease-out
-        ${isFocused
-          ? 'scale-110 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-4 ring-amber-500 ring-offset-[6px] ring-offset-slate-900'
-          : 'scale-95 shadow-lg shadow-black/20'}
+        <div className={`relative w-full h-[clamp(320px,54vh,460px)] rounded-2xl overflow-hidden transition-all duration-500 ease-out
+        ${isFocused ? focusEffects : idleEffects}
       `}>
         {/* Background Image */}
         <img
           src={service.image}
           alt={service.title}
           className={`w-full h-full object-cover transition-transform duration-1000 ease-out
-            ${isFocused ? 'scale-110' : 'scale-100'}
+            ${isFocused ? (isLowMotion ? 'scale-100' : 'scale-110') : 'scale-100'}
           `}
           loading="lazy"
         />
