@@ -1,0 +1,21 @@
+/* Global styles for Radix Grand Hotel TV Launcher */
+
+:root {
+  --accent-gold: #f59e0b; /* amber-500 */
+}
+
+/* Custom scrollbar hiding (redundant with index.html but good for safety) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Base styles that might be needed outside of Tailwind if CDN fails or for specific elements */
+body {
+  background-color: #0f172a; /* slate-900 */
+  color: #f8fafc;
+}
