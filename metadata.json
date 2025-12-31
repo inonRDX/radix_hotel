@@ -1,0 +1,7 @@
+{
+  "name": "Radix Grand Hotel TV Launcher",
+  "description": "A luxury, high-end hotel TV interface featuring live weather, concierge integration, and premium guest services.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
