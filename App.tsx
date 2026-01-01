@@ -208,7 +208,7 @@ const App: React.FC = () => {
 
   const handleCheckout = () => {
     safeRadixCommand(RadixCommands.CHECKOUT);
-    showToast('Check Out', 'Processing your checkout request...', 'fa-arrow-right-from-bracket');
+    showToast('Check Out', 'Processing your checkout request...', 'fa-arrow-right-from-bracket', 2500);
   };
 
   const toggleDND = () => {
@@ -332,7 +332,7 @@ const App: React.FC = () => {
           if (service.id === 'cast') {
             safeRadixCommand(RadixCommands.CAST);
           } else if (service.id === 'tv') {
-            safeRadixLaunch('com.tcl.tv');
+            safeRadixLaunch(RadixApps.TV);
           } else {
             setSelectedService(service);
           }

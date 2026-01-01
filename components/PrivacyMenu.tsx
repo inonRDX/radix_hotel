@@ -37,21 +37,31 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
         const updatePosition = () => {
             if (!triggerRef.current || !menuRef.current) return;
 
+            const scaleRaw = getComputedStyle(document.documentElement).getPropertyValue('--ui-scale');
+            const scale = Number.parseFloat(scaleRaw) || 1;
             const triggerRect = triggerRef.current.getBoundingClientRect();
             const menuRect = menuRef.current.getBoundingClientRect();
             const margin = 12;
 
+            const triggerTop = triggerRect.top / scale;
+            const triggerLeft = triggerRect.left / scale;
+            const triggerHeight = triggerRect.height / scale;
+            const triggerWidth = triggerRect.width / scale;
+            const menuHeight = menuRect.height / scale;
+            const menuWidth = menuRect.width / scale;
+            const viewportWidth = window.innerWidth / scale;
+
             // Prefer above; fall back below if not enough space
-            let top = triggerRect.top - menuRect.height - margin;
+            let top = triggerTop - menuHeight - margin;
             let newPlacement: 'top' | 'bottom' = 'top';
 
             if (top < margin) {
-                top = triggerRect.bottom + margin;
+                top = triggerTop + triggerHeight + margin;
                 newPlacement = 'bottom';
             }
 
-            let left = triggerRect.left + (triggerRect.width / 2) - (menuRect.width / 2);
-            left = Math.min(Math.max(margin, left), window.innerWidth - menuRect.width - margin);
+            let left = triggerLeft;
+            left = Math.min(Math.max(margin, left), viewportWidth - menuWidth - margin);
 
             setPosition({ top, left });
             setPlacement(newPlacement);
