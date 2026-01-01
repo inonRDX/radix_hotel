@@ -279,11 +279,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement instanceof HTMLElement) {
+      if (!showPrivacyMenu && document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
       if (showSplash) { dismissSplash(); return; }
-      const isBackKey = ['Escape', 'Backspace', 'BrowserBack', 'GoBack'].includes(e.key) || e.keyCode === 461;
+      const keyMap: Record<number, string> = {
+        19: 'ArrowUp',
+        20: 'ArrowDown',
+        21: 'ArrowLeft',
+        22: 'ArrowRight',
+        23: 'Enter',
+        66: 'Enter',
+        4: 'Escape'
+      };
+      const resolvedKey = keyMap[e.keyCode] || e.key;
+      const isBackKey = ['Escape', 'Backspace', 'BrowserBack', 'GoBack'].includes(resolvedKey) || e.keyCode === 461;
 
       if (selectedService) {
         if (isBackKey) {
@@ -292,16 +302,23 @@ const App: React.FC = () => {
         }
         return;
       }
+      if (showPrivacyMenu) {
+        if (isBackKey) {
+          e.preventDefault();
+          setShowPrivacyMenu(false);
+        }
+        return;
+      }
 
       const servicesCount = SERVICES.length;
       const appsCount = STREAMING_APPS.length;
       const footerCount = 4;
 
-      if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter', 'OK', 'Select'].includes(e.key) || e.code === 'NumpadEnter') {
+      if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter', 'OK', 'Select'].includes(resolvedKey) || e.code === 'NumpadEnter') {
         e.preventDefault();
       }
 
-      if (e.key === 'ArrowRight') {
+      if (resolvedKey === 'ArrowRight') {
         if (focusedRow === 'services') {
           handleElementFocus('services', Math.min(focusedIndex + 1, servicesCount - 1));
         } else if (focusedRow === 'apps') {
@@ -310,7 +327,7 @@ const App: React.FC = () => {
           handleElementFocus('footer', Math.min(footerFocusedIndex + 1, footerCount - 1));
         }
         setIsScrolled(true);
-      } else if (e.key === 'ArrowLeft') {
+      } else if (resolvedKey === 'ArrowLeft') {
         if (focusedRow === 'services') {
           handleElementFocus('services', Math.max(focusedIndex - 1, 0));
         } else if (focusedRow === 'apps') {
@@ -318,16 +335,16 @@ const App: React.FC = () => {
         } else {
           handleElementFocus('footer', Math.max(footerFocusedIndex - 1, 0));
         }
-      } else if (e.key === 'ArrowDown') {
+      } else if (resolvedKey === 'ArrowDown') {
         if (focusedRow === 'services') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
         if (focusedRow === 'apps') handleElementFocus('footer', Math.min(footerFocusedIndex, footerCount - 1));
-      } else if (e.key === 'ArrowUp') {
+      } else if (resolvedKey === 'ArrowUp') {
         if (focusedRow === 'apps') handleElementFocus('services', Math.min(focusedIndex, servicesCount - 1));
         if (focusedRow === 'footer') handleElementFocus('apps', Math.min(appFocusedIndex, appsCount - 1));
       } else if (
-        e.key === 'Enter' ||
-        e.key === 'OK' ||
-        e.key === 'Select' ||
+        resolvedKey === 'Enter' ||
+        resolvedKey === 'OK' ||
+        resolvedKey === 'Select' ||
         e.code === 'NumpadEnter'
       ) {
         if (focusedRow === 'services') {
@@ -351,7 +368,7 @@ const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, appFocusedIndex, footerFocusedIndex, focusedRow, selectedService, showSplash]);
+  }, [focusedIndex, appFocusedIndex, footerFocusedIndex, focusedRow, selectedService, showSplash, showPrivacyMenu]);
 
   const getModalContent = (service: Service): ModalContent => {
     switch (service.id) {

@@ -80,6 +80,22 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
 
     useEffect(() => {
         if (!isOpen) return;
+        const focusFirst = () => {
+            const items = menuRef.current?.querySelectorAll('button');
+            if (items && items.length > 0) {
+                (items[0] as HTMLButtonElement).focus();
+            }
+        };
+        const raf = requestAnimationFrame(focusFirst);
+        const timer = setTimeout(focusFirst, 50);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(timer);
+        };
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
 
         const handleClickOutside = (e: MouseEvent) => {
             if (
@@ -93,7 +109,7 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
         };
 
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'BrowserBack' || e.key === 'GoBack' || e.keyCode === 461) {
                 e.preventDefault();
                 onClose();
                 triggerRef.current?.focus();
@@ -138,6 +154,28 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
 
     if (!isOpen) return null;
 
+    const handleMenuKeyDown = (e: React.KeyboardEvent) => {
+        const items = menuRef.current?.querySelectorAll('button');
+        if (!items || items.length === 0) return;
+        const currentIndex = Array.from(items).findIndex(
+            item => item === document.activeElement
+        );
+        const index = currentIndex >= 0 ? currentIndex : 0;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const next = items[(index + 1) % items.length] as HTMLButtonElement;
+            next?.focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = items[(index - 1 + items.length) % items.length] as HTMLButtonElement;
+            prev?.focus();
+        } else if (e.key === 'Enter' || e.key === 'OK' || e.key === 'Select') {
+            e.preventDefault();
+            (items[index] as HTMLButtonElement)?.click();
+        }
+    };
+
     return (
         <div
             ref={menuRef}
@@ -148,6 +186,7 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
                 left: `${position.left}px`,
             }}
             data-placement={placement}
+            onKeyDown={handleMenuKeyDown}
         >
             {menuItems.map((item, index) => (
                 <button
@@ -157,6 +196,7 @@ const PrivacyMenu: React.FC<PrivacyMenuProps> = ({ isOpen, onClose, triggerRef }
                     onClick={() => handleItemClick(item.command)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                     tabIndex={0}
+                    autoFocus={index === 0}
                 >
                     <item.icon className="w-5 h-5" strokeWidth={2} />
                     <span className="text-sm font-medium">{item.label}</span>

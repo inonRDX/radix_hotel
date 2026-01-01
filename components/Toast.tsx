@@ -29,7 +29,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         const timer = setTimeout(() => {
             setShow(false);
             setTimeout(() => onDismiss(toast.id), 400);
-        }, toast.duration || 5000);
+        }, toast.duration || 3000);
 
         return () => clearTimeout(timer);
     }, [toast, onDismiss]);
@@ -82,7 +82,7 @@ export function useToasts() {
 
     const showToast = (title: string, body: string, icon?: string, duration?: number) => {
         const id = `toast-${Date.now()}-${Math.random()}`;
-        setToasts(prev => [...prev, { id, title, body, icon, duration }]);
+        setToasts([{ id, title, body, icon, duration }]);
     };
 
     const dismissToast = (id: string) => {
