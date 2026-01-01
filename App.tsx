@@ -4,7 +4,6 @@ import Header from './components/Header';
 import ServiceCard from './components/ServiceCard';
 import OverlayModal from './components/OverlayModal';
 import SplashScreen from './components/SplashScreen';
-import PrivacyMenu from './components/PrivacyMenu';
 import { ToastContainer, useToasts } from './components/Toast';
 import { SERVICES, STREAMING_APPS, AppIcon } from './constants';
 import { Service, ModalContent, WeatherData, GuestInfo, Alarm } from './types';
@@ -26,11 +25,10 @@ const App: React.FC = () => {
   const [guest, setGuest] = useState<GuestInfo>({ name: 'Alexander Henderson', room: '802', tier: 'Gold' });
   const [isDND, setIsDND] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [showPrivacyMenu, setShowPrivacyMenu] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [welcomePhase, setWelcomePhase] = useState<'visible' | 'fading' | 'hidden'>('visible');
   const [isLowMotion, setIsLowMotion] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const privacyButtonRef = useRef<HTMLButtonElement>(null);
   const serviceCardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const { toasts, showToast, dismissToast } = useToasts();
 
@@ -225,7 +223,7 @@ const App: React.FC = () => {
   };
 
   const handleSetAlarm = () => {
-    showToast('Set Alarm', 'Alarm setup is not configured yet.', 'fa-bell');
+    showToast('Set Alarm', 'Alarm has been set to 07:00.', 'fa-bell');
   };
 
   // Handle welcome text phasing: visible -> fading -> hidden
@@ -279,7 +277,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!showPrivacyMenu && document.activeElement instanceof HTMLElement) {
+      if (!showPrivacyModal && document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
       if (showSplash) { dismissSplash(); return; }
@@ -302,10 +300,10 @@ const App: React.FC = () => {
         }
         return;
       }
-      if (showPrivacyMenu) {
+      if (showPrivacyModal) {
         if (isBackKey) {
           e.preventDefault();
-          setShowPrivacyMenu(false);
+          setShowPrivacyModal(false);
         }
         return;
       }
@@ -361,14 +359,14 @@ const App: React.FC = () => {
         } else {
           if (footerFocusedIndex === 0) toggleDND();
           if (footerFocusedIndex === 1) handleSetAlarm();
-          if (footerFocusedIndex === 2) setShowPrivacyMenu(!showPrivacyMenu);
+          if (footerFocusedIndex === 2) setShowPrivacyModal(true);
           if (footerFocusedIndex === 3) handleCheckout();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, appFocusedIndex, footerFocusedIndex, focusedRow, selectedService, showSplash, showPrivacyMenu]);
+  }, [focusedIndex, appFocusedIndex, footerFocusedIndex, focusedRow, selectedService, showSplash, showPrivacyModal]);
 
   const getModalContent = (service: Service): ModalContent => {
     switch (service.id) {
@@ -514,6 +512,27 @@ const App: React.FC = () => {
     }
   };
 
+  const getPrivacyModalContent = (): ModalContent => ({
+    title: 'Privacy',
+    type: 'menu',
+    body: (
+      <div className="space-y-4">
+        <button
+          className="modal-focus-ring w-full flex items-center gap-3 p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left"
+          onClick={() => safeRadixCommand(RadixCommands.TOS)}
+        >
+          <span className="text-lg font-medium">Terms of Service</span>
+        </button>
+        <button
+          className="modal-focus-ring w-full flex items-center gap-3 p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-amber-600/20 hover:border-amber-500/50 transition-all text-left"
+          onClick={() => safeRadixCommand(RadixCommands.USAGE_DIAGNOSTICS)}
+        >
+          <span className="text-lg font-medium">Usage & Diagnostics</span>
+        </button>
+      </div>
+    )
+  });
+
   return (
     <div className="app-scale">
       <div className="relative w-full h-full overflow-hidden bg-slate-900 text-white font-sans">
@@ -645,14 +664,13 @@ const App: React.FC = () => {
               <span className="text-[12px] uppercase tracking-widest font-bold">Set Alarm</span>
             </button>
             <button
-              ref={privacyButtonRef}
               className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 2 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
               onMouseEnter={() => handleElementFocus('footer', 2)}
               onPointerEnter={() => handleElementFocus('footer', 2)}
               tabIndex={-1}
-              onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
+              onClick={() => setShowPrivacyModal(true)}
             >
               <Shield className="w-5 h-5" />
               <span className="text-[12px] uppercase tracking-widest font-bold">Privacy</span>
@@ -696,11 +714,13 @@ const App: React.FC = () => {
         )}
 
         <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-        <PrivacyMenu
-          isOpen={showPrivacyMenu}
-          onClose={() => setShowPrivacyMenu(false)}
-          triggerRef={privacyButtonRef}
-        />
+        {showPrivacyModal && (
+          <OverlayModal
+            content={getPrivacyModalContent()}
+            onClose={() => setShowPrivacyModal(false)}
+            isLowMotion={isLowMotion}
+          />
+        )}
       </div>
     </div>
   );
