@@ -10,7 +10,7 @@ import { SERVICES, STREAMING_APPS, AppIcon } from './constants';
 import { Service, ModalContent, WeatherData, GuestInfo, Alarm } from './types';
 import { Star, Shield, Bell, Moon, Clock, Settings, LogOut, ChevronRight } from 'lucide-react';
 import { alarmAudio } from './utils/audio';
-import { safeRadixLaunch, safeRadixCommand, RadixCommands, isRadixEnvironment } from './utils/radix';
+import { safeRadixLaunch, safeRadixCommand, RadixCommands, isRadixEnvironment, RadixApps } from './utils/radix';
 import { locationService } from './utils/location';
 import { Agent } from './utils/agent';
 
@@ -280,8 +280,13 @@ const App: React.FC = () => {
         document.activeElement.blur();
       }
       if (showSplash) { dismissSplash(); return; }
+      const isBackKey = ['Escape', 'Backspace', 'BrowserBack', 'GoBack'].includes(e.key) || e.keyCode === 461;
+
       if (selectedService) {
-        if (e.key === 'Escape') setSelectedService(null);
+        if (isBackKey) {
+          e.preventDefault();
+          setSelectedService(null);
+        }
         return;
       }
 
@@ -323,7 +328,14 @@ const App: React.FC = () => {
         e.code === 'NumpadEnter'
       ) {
         if (focusedRow === 'services') {
-          setSelectedService(SERVICES[focusedIndex]);
+          const service = SERVICES[focusedIndex];
+          if (service.id === 'cast') {
+            safeRadixCommand(RadixCommands.CAST);
+          } else if (service.id === 'tv') {
+            safeRadixLaunch('com.tcl.tv');
+          } else {
+            setSelectedService(service);
+          }
         } else if (focusedRow === 'apps') {
           launchApp(STREAMING_APPS[appFocusedIndex].package);
         } else {
@@ -488,13 +500,13 @@ const App: React.FC = () => {
         {showSplash && <SplashScreen guest={guest} onDismiss={dismissSplash} />}
 
         <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
-        <div className="absolute inset-0 bg-slate-900/40 z-10" />
-        <img
-          src={focusedRow === 'services' ? SERVICES[focusedIndex].image : 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=2000'}
-          className={`w-full h-full object-cover opacity-60 transition-all ${isLowMotion ? 'duration-300' : 'blur-sm scale-105 duration-1000'}`}
-          alt=""
-        />
-      </div>
+          <div className="absolute inset-0 bg-slate-900/40 z-10" />
+          <img
+            src={focusedRow === 'services' ? SERVICES[focusedIndex].image : 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=2000'}
+            className={`w-full h-full object-cover opacity-60 transition-all ${isLowMotion ? 'duration-300' : 'blur-sm scale-105 duration-1000'}`}
+            alt=""
+          />
+        </div>
 
         <Header weather={weather} guest={guest} />
 
@@ -522,21 +534,21 @@ const App: React.FC = () => {
               style={{ scrollSnapType: 'x proximity' }}
             >
               {SERVICES.map((service, index) => (
-              <ServiceCard
-                key={service.id}
-                ref={el => { serviceCardRefs.current[index] = el; }}
-                service={service}
-                isFocused={focusedRow === 'services' && focusedIndex === index}
-                isLowMotion={isLowMotion}
-                onFocus={() => {
-                  handleElementFocus('services', index);
-                  setIsScrolled(true);
-                }}
-                onClick={() => {
+                <ServiceCard
+                  key={service.id}
+                  ref={el => { serviceCardRefs.current[index] = el; }}
+                  service={service}
+                  isFocused={focusedRow === 'services' && focusedIndex === index}
+                  isLowMotion={isLowMotion}
+                  onFocus={() => {
+                    handleElementFocus('services', index);
+                    setIsScrolled(true);
+                  }}
+                  onClick={() => {
                     if (service.id === 'cast') {
                       safeRadixCommand(RadixCommands.CAST);
                     } else if (service.id === 'tv') {
-                      safeRadixLaunch('com.tcl.tv');
+                      safeRadixLaunch(RadixApps.TV);
                     } else {
                       setSelectedService(service);
                     }
@@ -551,16 +563,16 @@ const App: React.FC = () => {
             <h3 className="text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
             <div className="flex space-x-6">
               {STREAMING_APPS.map((app, index) => (
-              <button
-                key={app.id}
-                onMouseEnter={() => handleElementFocus('apps', index)}
-                onPointerEnter={() => handleElementFocus('apps', index)}
-                tabIndex={-1}
-                onClick={() => launchApp(app.package)}
-                className={`relative h-[clamp(5rem,12vh,7rem)] w-[clamp(9.5rem,24vw,13rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
+                <button
+                  key={app.id}
+                  onMouseEnter={() => handleElementFocus('apps', index)}
+                  onPointerEnter={() => handleElementFocus('apps', index)}
+                  tabIndex={-1}
+                  onClick={() => launchApp(app.package)}
+                  className={`relative h-[clamp(5rem,12vh,7rem)] w-[clamp(9.5rem,24vw,13rem)] rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-out flex items-center justify-center group
                   ${focusedRow === 'apps' && appFocusedIndex === index
-                    ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
-                    : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
+                      ? 'border-amber-500 border-2 scale-110 shadow-amber-500/40 bg-white/30 ring-4 ring-amber-500/20'
+                      : 'bg-white/20 border-white/10 border-2 opacity-100 hover:bg-white/25'}
                 `}
                 >
                   {/* Logo with subtle highlight */}
@@ -587,67 +599,67 @@ const App: React.FC = () => {
         <footer className="fixed bottom-4 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
           style={{ height: 'var(--footer-height)' }}>
           <div className="flex space-x-6">
-          <button
-            className={`flex items-center space-x-4 px-8 py-4 rounded-full border transition-all
+            <button
+              className={`flex items-center space-x-4 px-8 py-4 rounded-full border transition-all
               ${isDND ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-white/10 border-white/20 text-slate-300 hover:text-white'}
               ${focusedRow === 'footer' && footerFocusedIndex === 0 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
-            onMouseEnter={() => handleElementFocus('footer', 0)}
-            onPointerEnter={() => handleElementFocus('footer', 0)}
-            tabIndex={-1}
-            onClick={toggleDND}
-          >
+              onMouseEnter={() => handleElementFocus('footer', 0)}
+              onPointerEnter={() => handleElementFocus('footer', 0)}
+              tabIndex={-1}
+              onClick={toggleDND}
+            >
               <Moon className={`w-5 h-5 ${isDND ? 'fill-current' : ''}`} />
               <span className="text-[12px] uppercase tracking-widest font-bold">{isDND ? 'Do Not Disturb ON' : 'DND Mode'}</span>
             </button>
-          <button
-            className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+            <button
+              className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 1 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
-            onMouseEnter={() => handleElementFocus('footer', 1)}
-            onPointerEnter={() => handleElementFocus('footer', 1)}
-            tabIndex={-1}
-            onClick={handleSetAlarm}
-          >
+              onMouseEnter={() => handleElementFocus('footer', 1)}
+              onPointerEnter={() => handleElementFocus('footer', 1)}
+              tabIndex={-1}
+              onClick={handleSetAlarm}
+            >
               <Clock className="w-5 h-5" />
               <span className="text-[12px] uppercase tracking-widest font-bold">Set Alarm</span>
             </button>
-          <button
-            ref={privacyButtonRef}
-            className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
+            <button
+              ref={privacyButtonRef}
+              className={`flex items-center space-x-4 px-8 py-4 rounded-full bg-white/10 border border-white/20 text-slate-300 hover:text-white transition-all
               ${focusedRow === 'footer' && footerFocusedIndex === 2 ? 'ring-4 ring-amber-500/40 text-white' : ''}
             `}
-            onMouseEnter={() => handleElementFocus('footer', 2)}
-            onPointerEnter={() => handleElementFocus('footer', 2)}
-            tabIndex={-1}
-            onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
-          >
+              onMouseEnter={() => handleElementFocus('footer', 2)}
+              onPointerEnter={() => handleElementFocus('footer', 2)}
+              tabIndex={-1}
+              onClick={() => setShowPrivacyMenu(!showPrivacyMenu)}
+            >
               <Shield className="w-5 h-5" />
               <span className="text-[12px] uppercase tracking-widest font-bold">Privacy</span>
             </button>
           </div>
 
-        <button
-          className={`flex items-center space-x-4 px-11 py-4 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-[12px]
+          <button
+            className={`flex items-center space-x-4 px-11 py-4 bg-red-600/20 hover:bg-red-600 border border-red-600/50 text-red-100 rounded-xl transition-all font-bold uppercase tracking-widest text-[12px]
             ${focusedRow === 'footer' && footerFocusedIndex === 3 ? 'ring-4 ring-amber-500/40 text-white' : ''}
           `}
-          onMouseEnter={() => handleElementFocus('footer', 3)}
-          onPointerEnter={() => handleElementFocus('footer', 3)}
-          tabIndex={-1}
-          onClick={handleCheckout}
-        >
+            onMouseEnter={() => handleElementFocus('footer', 3)}
+            onPointerEnter={() => handleElementFocus('footer', 3)}
+            tabIndex={-1}
+            onClick={handleCheckout}
+          >
             <LogOut className="w-4 h-4" />
             <span>Checkout</span>
           </button>
         </footer>
 
-      {selectedService && (
-        <OverlayModal
-          content={getModalContent(selectedService)}
-          onClose={() => setSelectedService(null)}
-          isLowMotion={isLowMotion}
-        />
-      )}
+        {selectedService && (
+          <OverlayModal
+            content={getModalContent(selectedService)}
+            onClose={() => setSelectedService(null)}
+            isLowMotion={isLowMotion}
+          />
+        )}
 
         {alarmAudio.isPlaying && (
           <div className="fixed inset-0 z-[1000] bg-red-950/90 flex flex-col items-center justify-center space-y-8 animate-pulse">
