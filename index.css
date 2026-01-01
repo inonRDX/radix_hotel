@@ -3,8 +3,8 @@
 :root {
     --accent-gold: #f59e0b;
     /* amber-500 */
-    --header-height: clamp(4rem, 10vh, 6rem);
-    --footer-height: clamp(4rem, 10vh, 6rem);
+    --header-height: clamp(5rem, 12vh, 8rem);
+    --footer-height: clamp(5rem, 12vh, 8rem);
     --internal-zoom: 1;
     --ui-scale: 1;
 }
@@ -25,6 +25,10 @@ body,
 }
 
 /* Base styles with zoom awareness */
+html {
+    font-size: 140%;
+}
+
 body {
     background-color: #0f172a;
     /* slate-900 */
@@ -37,18 +41,18 @@ body {
     /* Prevent text selection which can look messy on TV/Touch */
     user-select: none;
     -webkit-user-select: none;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 @media (max-height: 800px) {
     html {
-        font-size: 14px;
+        font-size: 19.6px;
     }
 }
 
 @media (max-height: 650px) {
     html {
-        font-size: 12px;
+        font-size: 16.8px;
     }
 }
 

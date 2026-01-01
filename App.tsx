@@ -193,12 +193,15 @@ const App: React.FC = () => {
     const updateScale = () => {
       const baseWidth = 1920;
       const baseHeight = 1080;
-      const scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
+      const zoom = window.visualViewport?.scale || 1;
+      const scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight) / zoom;
       document.documentElement.style.setProperty('--ui-scale', scale.toFixed(3));
     };
 
     updateScale();
     window.addEventListener('resize', updateScale);
+    window.visualViewport?.addEventListener('resize', updateScale);
+    window.visualViewport?.addEventListener('scroll', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
@@ -527,7 +530,7 @@ const App: React.FC = () => {
 
           {/* Main Services Row */}
           <div className="mb-4 overflow-visible">
-            <h3 className="px-[clamp(1rem,4vw,4rem)] text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
+            <h3 className="px-[clamp(1rem,4vw,4rem)] text-[clamp(1.3rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-2">Guest Services</h3>
             <div
               ref={scrollContainerRef}
               className="flex space-x-2 overflow-x-auto no-scrollbar items-center py-12 px-[clamp(1rem,4vw,4rem)]"
@@ -560,7 +563,7 @@ const App: React.FC = () => {
 
           {/* Streaming Apps Row */}
           <div className="px-[clamp(1rem,4vw,4rem)] mb-4">
-            <h3 className="text-[clamp(0.75rem,1.1vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
+            <h3 className="text-[clamp(1.0rem,1.0vw,1rem)] tracking-[0.4em] uppercase font-bold text-amber-500/80 mb-4">Streaming Entertainment</h3>
             <div className="flex space-x-6">
               {STREAMING_APPS.map((app, index) => (
                 <button
@@ -596,7 +599,7 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        <footer className="fixed bottom-4 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
+        <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-[clamp(1rem,4vw,4rem)] z-50 bg-gradient-to-t from-slate-900/90 to-transparent"
           style={{ height: 'var(--footer-height)' }}>
           <div className="flex space-x-6">
             <button
